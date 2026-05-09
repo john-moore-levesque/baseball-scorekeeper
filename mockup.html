@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scorecard Mockup — WSH vs MIN</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --paper: #faf6ed;
+    --ink: #2c2416;
+    --grid: #bfb7a4;
+    --grid-heavy: #8a8172;
+    --accent: #b8342e;
+    --hit-bg: rgba(184, 52, 46, 0.07);
+    --header-bg: #2c2416;
+    --header-fg: #faf6ed;
+    --cell-w: 82px;
+    --cell-h: 72px;
+    --name-w: 200px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #e8e0d0;
+    font-family: 'Crimson Pro', Georgia, serif;
+    color: var(--ink);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .scorecard {
+    background: var(--paper);
+    border: 2px solid var(--grid-heavy);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+    padding: 28px 32px 24px;
+    max-width: 1160px;
+    width: 100%;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--grid-heavy);
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .header h1 .at { font-weight: 400; text-transform: lowercase; font-size: 20px; margin: 0 6px; }
+  .header .meta-line {
+    font-size: 14px;
+    color: #6b6152;
+    font-weight: 400;
+  }
+
+  /* ── Team section ── */
+  .team-section {
+    margin-bottom: 20px;
+  }
+  .team-label {
+    background: var(--header-bg);
+    color: var(--header-fg);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    display: inline-block;
+    margin-bottom: 0;
+  }
+
+  /* ── Grid ── */
+  .grid {
+    display: grid;
+    border: 1.5px solid var(--grid-heavy);
+    width: fit-content;
+  }
+
+  .grid-header {
+    display: contents;
+  }
+  .grid-header .cell {
+    background: #eee8d8;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+    padding: 4px 2px;
+    border-bottom: 2px solid var(--grid-heavy);
+    color: #6b6152;
+  }
+
+  .cell {
+    border-right: 1px solid var(--grid);
+    border-bottom: 1px solid var(--grid);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--cell-h);
+    position: relative;
+  }
+  .cell:last-child { border-right: none; }
+
+  .cell-name {
+    min-width: var(--name-w);
+    max-width: var(--name-w);
+    padding: 4px 8px;
+    align-items: flex-start;
+    justify-content: center;
+    border-right: 2px solid var(--grid-heavy);
+    line-height: 1.2;
+  }
+  .cell-name .player-name {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .cell-name .player-detail {
+    font-size: 11px;
+    color: #8a8172;
+  }
+  .cell-name .order-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #8a8172;
+    margin-right: 4px;
+  }
+
+  .cell-inning {
+    min-width: var(--cell-w);
+    max-width: var(--cell-w);
+    padding: 4px;
+    gap: 2px;
+  }
+  .cell-inning.has-hit {
+    background: var(--hit-bg);
+  }
+
+  .cell-stat {
+    min-width: 36px;
+    max-width: 36px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    text-align: center;
+    padding: 4px 2px;
+  }
+  .cell-stat.stat-header {
+    background: #eee8d8;
+    font-size: 10px;
+    font-weight: 500;
+    color: #6b6152;
+    min-height: auto;
+    border-bottom: 2px solid var(--grid-heavy);
+  }
+
+  /* ── PA result code ── */
+  .result-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  .result-code.hit { color: var(--accent); font-weight: 700; }
+  .result-code.walk { color: #2d6a2e; }
+  .result-code.out { color: var(--ink); }
+
+  /* ── Diamond ── */
+  .diamond-wrap {
+    width: 30px;
+    height: 30px;
+    position: relative;
+    margin: 1px 0;
+  }
+  .diamond-wrap svg {
+    width: 100%;
+    height: 100%;
+  }
+  .base-empty {
+    fill: none;
+    stroke: var(--grid);
+    stroke-width: 1.5;
+  }
+  .base-reached {
+    fill: var(--accent);
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    opacity: 0.85;
+  }
+  .base-scored {
+    fill: var(--accent);
+    stroke: var(--accent);
+    stroke-width: 1.5;
+  }
+  .diamond-dot {
+    fill: var(--accent);
+  }
+
+  /* ── Pitch sequence ── */
+  .pitch-seq {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #8a8172;
+    letter-spacing: 1px;
+  }
+
+  /* ── RBI badge ── */
+  .rbi-badge {
+    position: absolute;
+    top: 3px;
+    right: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* ── Line score ── */
+  .line-score {
+    margin-top: 20px;
+    border: 1.5px solid var(--grid-heavy);
+    width: fit-content;
+  }
+  .line-score .ls-row {
+    display: flex;
+  }
+  .line-score .ls-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    text-align: center;
+    padding: 5px 0;
+    border-right: 1px solid var(--grid);
+    border-bottom: 1px solid var(--grid);
+    width: 36px;
+  }
+  .line-score .ls-cell:last-child { border-right: none; }
+  .line-score .ls-row:last-child .ls-cell { border-bottom: none; }
+  .line-score .ls-team {
+    width: 56px;
+    font-family: 'Crimson Pro', serif;
+    font-weight: 700;
+    font-size: 14px;
+    text-align: left;
+    padding-left: 8px;
+    border-right: 2px solid var(--grid-heavy);
+  }
+  .line-score .ls-header {
+    background: #eee8d8;
+    font-size: 10px;
+    font-weight: 500;
+    color: #6b6152;
+  }
+  .line-score .ls-total {
+    font-weight: 700;
+    border-left: 2px solid var(--grid-heavy);
+  }
+
+  /* ── Pitching summary ── */
+  .pitching-summary {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #6b6152;
+  }
+  .pitching-summary h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .pitching-summary table {
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .pitching-summary td, .pitching-summary th {
+    padding: 2px 10px 2px 0;
+    text-align: left;
+  }
+  .pitching-summary th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #8a8172;
+    font-weight: 500;
+  }
+  .pitcher-name { font-weight: 600; color: var(--ink); }
+
+  .empty-cell { color: transparent; }
+
+  /* ── Substitution row ── */
+  .sub-row .cell-name {
+    border-top: 1px dashed var(--grid);
+    min-height: auto;
+    padding: 2px 8px 2px 28px;
+  }
+  .sub-row .cell-name .player-name { font-size: 12px; font-weight: 400; font-style: italic; }
+  .sub-row .cell-inning { border-top: 1px dashed var(--grid); min-height: auto; }
+  .sub-row .cell-stat { border-top: 1px dashed var(--grid); min-height: auto; }
+</style>
+</head>
+<body>
+
+<div class="scorecard">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>MIN <span class="at">at</span> WSH</h1>
+    <div class="meta-line">May 7, 2026 &nbsp;·&nbsp; Nationals Park &nbsp;·&nbsp; 72°F, Clear; wind 6 mph Out to CF &nbsp;·&nbsp; First pitch 6:45 PM</div>
+  </div>
+
+  <!-- ═══ AWAY TEAM ═══ -->
+  <div class="team-section">
+    <div class="team-label">Minnesota Twins — Batting</div>
+
+    <div class="grid" style="grid-template-columns: var(--name-w) repeat(9, var(--cell-w)) repeat(4, 36px);">
+
+      <!-- Column headers -->
+      <div class="grid-header">
+        <div class="cell cell-name" style="background:#eee8d8; min-height:auto; border-bottom:2px solid var(--grid-heavy);">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6b6152; font-weight:500;">BATTING ORDER</span>
+        </div>
+        <div class="cell cell-inning" style="background:#eee8d8; min-height:auto; border-bottom:2px solid var(--grid-heavy); font-family:'JetBrains Mono',monospace; font-size:11px; color:#6b6152; font-weight:500;">1</div>
+        <div class="cell cell-inning" style="background:#eee8d8; min-height:auto; border-bottom:2px solid var(--grid-heavy); font-family:'JetBrains Mono',monospace; font-size:11px; color:#6b6152; font-weight:500;">2</div>
+        <div class="cell cell-inning" style="background:#eee8d8; min-height:auto; border-bottom:2px solid var(--grid-heavy); font-family:'JetBrains Mono',monospace; font-size:11px; color:#6b6152; font-weight:500;">3</div>
+        <div class="cell cell-inning" style="background:#eee8d8; min-height:auto; border-bottom:2px solid var(--grid-heavy); font-family:'JetBrains Mono',monospace; font-size:11px; color:#6b6152; font-weight:500;">4</div>
+        <div class="cell cell-inning" style="background:#eee8d8; min-height:auto; border-bottom:2px solid var(--grid-heavy); font-family:'JetBrains Mono',monospace; font-size:11px; color:#6b6152; font-weight:500;">5</div>
+        <div class="cell cell-inning" style="background:#eee8d8; min-height:auto; border-bottom:2px solid var(--grid-heavy); font-family:'JetBrains Mono',monospace; font-size:11px; color:#6b6152; font-weight:500;">6</div>
+        <div class="cell cell-inning" style="background:#eee8d8; min-height:auto; border-bottom:2px solid var(--grid-heavy); font-family:'JetBrains Mono',monospace; font-size:11px; color:#6b6152; font-weight:500;">7</div>
+        <div class="cell cell-inning" style="background:#eee8d8; min-height:auto; border-bottom:2px solid var(--grid-heavy); font-family:'JetBrains Mono',monospace; font-size:11px; color:#6b6152; font-weight:500;">8</div>
+        <div class="cell cell-inning" style="background:#eee8d8; min-height:auto; border-bottom:2px solid var(--grid-heavy); font-family:'JetBrains Mono',monospace; font-size:11px; color:#6b6152; font-weight:500;">9</div>
+        <div class="cell cell-stat stat-header">AB</div>
+        <div class="cell cell-stat stat-header">R</div>
+        <div class="cell cell-stat stat-header">H</div>
+        <div class="cell cell-stat stat-header">RBI</div>
+      </div>
+
+      <!-- Batter 1 -->
+      <div class="cell cell-name">
+        <div><span class="order-num">1</span> <span class="player-name">Willi Castro</span></div>
+        <div class="player-detail">#2 · SS</div>
+      </div>
+      <div class="cell cell-inning has-hit">
+        <div class="result-code hit">2B8</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/><line x1="3" y1="15" x2="15" y2="27" stroke="#b8342e" stroke-width="2.5" stroke-linecap="round"/><line x1="15" y1="27" x2="27" y2="15" stroke="#b8342e" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="pitch-seq">B S ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">F8</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">S B ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">6-3</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">B ✕</div>
+      </div>
+      <div class="cell cell-inning has-hit">
+        <div class="result-code hit">1B7</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/><line x1="15" y1="27" x2="27" y2="15" stroke="#b8342e" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="pitch-seq">S S F B ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">K</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">S S ✕</div>
+      </div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-stat">5</div>
+      <div class="cell cell-stat">1</div>
+      <div class="cell cell-stat">2</div>
+      <div class="cell cell-stat">0</div>
+
+      <!-- Batter 2 -->
+      <div class="cell cell-name">
+        <div><span class="order-num">2</span> <span class="player-name">Byron Buxton</span></div>
+        <div class="player-detail">#25 · CF</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">ꓘ</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">B S S ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code walk">BB</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/><line x1="15" y1="27" x2="27" y2="15" stroke="#2d6a2e" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="pitch-seq">B B S B B</div>
+      </div>
+      <div class="cell cell-inning has-hit" style="position:relative;">
+        <div class="rbi-badge">1</div>
+        <div class="result-code hit">HR</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-reached"/><circle cx="15" cy="15" r="3" fill="#faf6ed"/></svg>
+        <div class="pitch-seq">B ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">F9</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">L4</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">S F ✕</div>
+      </div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-stat">4</div>
+      <div class="cell cell-stat">1</div>
+      <div class="cell cell-stat">1</div>
+      <div class="cell cell-stat">1</div>
+
+      <!-- Batter 3 -->
+      <div class="cell cell-name">
+        <div><span class="order-num">3</span> <span class="player-name">Carlos Correa</span></div>
+        <div class="player-detail">#4 · 3B</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">F7</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">B ✕</div>
+      </div>
+      <div class="cell cell-inning has-hit" style="position:relative;">
+        <div class="rbi-badge">1</div>
+        <div class="result-code hit">1B5</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/><line x1="15" y1="27" x2="27" y2="15" stroke="#b8342e" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="pitch-seq">B S ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">4-3</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">S ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">K</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">S S B ✕</div>
+      </div>
+      <div class="cell cell-inning has-hit">
+        <div class="result-code hit">2B9</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/><line x1="3" y1="15" x2="15" y2="27" stroke="#b8342e" stroke-width="2.5" stroke-linecap="round"/><line x1="15" y1="27" x2="27" y2="15" stroke="#b8342e" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="pitch-seq">B B ✕</div>
+      </div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-stat">5</div>
+      <div class="cell cell-stat">0</div>
+      <div class="cell cell-stat">2</div>
+      <div class="cell cell-stat">1</div>
+
+      <!-- Batter 4 -->
+      <div class="cell cell-name">
+        <div><span class="order-num">4</span> <span class="player-name">Royce Lewis</span></div>
+        <div class="player-detail">#23 · DH</div>
+      </div>
+      <div class="cell cell-inning has-hit" style="position:relative;">
+        <div class="rbi-badge">2</div>
+        <div class="result-code hit">HR</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-reached"/><circle cx="15" cy="15" r="3" fill="#faf6ed"/></svg>
+        <div class="pitch-seq">B S ✕</div>
+      </div>
+      <div class="cell cell-inning has-hit">
+        <div class="result-code hit">1B4</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/><line x1="15" y1="27" x2="27" y2="15" stroke="#b8342e" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="pitch-seq">✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code walk">BB</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/><line x1="15" y1="27" x2="27" y2="15" stroke="#2d6a2e" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="pitch-seq">B B S B B</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">F8</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">S ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">6-3</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">B ✕</div>
+      </div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-stat">4</div>
+      <div class="cell cell-stat">1</div>
+      <div class="cell cell-stat">2</div>
+      <div class="cell cell-stat">2</div>
+
+      <!-- Batter 5 -->
+      <div class="cell cell-name">
+        <div><span class="order-num">5</span> <span class="player-name">Alex Kirilloff</span></div>
+        <div class="player-detail">#19 · 1B</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">K</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">F S ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">6-4-3 DP</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">F9</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">B S ✕</div>
+      </div>
+      <div class="cell cell-inning has-hit">
+        <div class="result-code hit">1B7</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/><line x1="15" y1="27" x2="27" y2="15" stroke="#b8342e" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="pitch-seq">S B ✕</div>
+      </div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-stat">4</div>
+      <div class="cell cell-stat">0</div>
+      <div class="cell cell-stat">1</div>
+      <div class="cell cell-stat">0</div>
+
+      <!-- Batter 6 -->
+      <div class="cell cell-name">
+        <div><span class="order-num">6</span> <span class="player-name">Trevor Larnach</span></div>
+        <div class="player-detail">#9 · RF</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">L6</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">S F B ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">K</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">S B S ✕</div>
+      </div>
+      <div class="cell cell-inning has-hit">
+        <div class="result-code hit">1B9</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/><line x1="15" y1="27" x2="27" y2="15" stroke="#b8342e" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="pitch-seq">B ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">P5</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">F ✕</div>
+      </div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-stat">4</div>
+      <div class="cell cell-stat">0</div>
+      <div class="cell cell-stat">1</div>
+      <div class="cell cell-stat">0</div>
+
+      <!-- Batter 7 -->
+      <div class="cell cell-name">
+        <div><span class="order-num">7</span> <span class="player-name">Edouard Julien</span></div>
+        <div class="player-detail">#27 · 2B</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code walk">BB</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/><line x1="15" y1="27" x2="27" y2="15" stroke="#2d6a2e" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="pitch-seq">B S B B B</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">F7</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">B ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">K</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">S B S ✕</div>
+      </div>
+      <div class="cell cell-inning has-hit" style="position:relative;">
+        <div class="rbi-badge">1</div>
+        <div class="result-code hit">2B8</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/><line x1="3" y1="15" x2="15" y2="27" stroke="#b8342e" stroke-width="2.5" stroke-linecap="round"/><line x1="15" y1="27" x2="27" y2="15" stroke="#b8342e" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="pitch-seq">✕</div>
+      </div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-stat">3</div>
+      <div class="cell cell-stat">0</div>
+      <div class="cell cell-stat">1</div>
+      <div class="cell cell-stat">1</div>
+
+      <!-- Batter 8 -->
+      <div class="cell cell-name">
+        <div><span class="order-num">8</span> <span class="player-name">Christian Vázquez</span></div>
+        <div class="player-detail">#8 · C</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">5-3</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">B S ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">ꓘ</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">B S S ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">F8</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">S ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">K</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">S S ✕</div>
+      </div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-stat">4</div>
+      <div class="cell cell-stat">0</div>
+      <div class="cell cell-stat">0</div>
+      <div class="cell cell-stat">0</div>
+
+      <!-- Batter 9 -->
+      <div class="cell cell-name">
+        <div><span class="order-num">9</span> <span class="player-name">Manuel Margot</span></div>
+        <div class="player-detail">#13 · LF</div>
+      </div>
+      <div class="cell cell-inning has-hit">
+        <div class="result-code hit">1B6</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/><line x1="15" y1="27" x2="27" y2="15" stroke="#b8342e" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="pitch-seq">B B S ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">K</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">S S ✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code out">6-3</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/></svg>
+        <div class="pitch-seq">✕</div>
+      </div>
+      <div class="cell cell-inning">
+        <div class="result-code walk">BB</div>
+        <svg class="diamond-wrap" viewBox="0 0 30 30"><polygon points="15,3 27,15 15,27 3,15" class="base-empty"/><line x1="15" y1="27" x2="27" y2="15" stroke="#2d6a2e" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="pitch-seq">B B B S B</div>
+      </div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-inning"></div>
+      <div class="cell cell-stat">3</div>
+      <div class="cell cell-stat">1</div>
+      <div class="cell cell-stat">1</div>
+      <div class="cell cell-stat">0</div>
+
+    </div>
+  </div>
+
+  <!-- ═══ LINE SCORE ═══ -->
+  <div class="line-score">
+    <div class="ls-row">
+      <div class="ls-cell ls-team ls-header"></div>
+      <div class="ls-cell ls-header">1</div>
+      <div class="ls-cell ls-header">2</div>
+      <div class="ls-cell ls-header">3</div>
+      <div class="ls-cell ls-header">4</div>
+      <div class="ls-cell ls-header">5</div>
+      <div class="ls-cell ls-header">6</div>
+      <div class="ls-cell ls-header">7</div>
+      <div class="ls-cell ls-header">8</div>
+      <div class="ls-cell ls-header">9</div>
+      <div class="ls-cell ls-header ls-total">R</div>
+      <div class="ls-cell ls-header ls-total">H</div>
+      <div class="ls-cell ls-header ls-total">E</div>
+    </div>
+    <div class="ls-row">
+      <div class="ls-cell ls-team">MIN</div>
+      <div class="ls-cell">2</div>
+      <div class="ls-cell">1</div>
+      <div class="ls-cell">0</div>
+      <div class="ls-cell">0</div>
+      <div class="ls-cell">2</div>
+      <div class="ls-cell">0</div>
+      <div class="ls-cell">0</div>
+      <div class="ls-cell">0</div>
+      <div class="ls-cell">0</div>
+      <div class="ls-cell ls-total">5</div>
+      <div class="ls-cell ls-total">9</div>
+      <div class="ls-cell ls-total">0</div>
+    </div>
+    <div class="ls-row">
+      <div class="ls-cell ls-team">WSH</div>
+      <div class="ls-cell">0</div>
+      <div class="ls-cell">0</div>
+      <div class="ls-cell">1</div>
+      <div class="ls-cell">0</div>
+      <div class="ls-cell">0</div>
+      <div class="ls-cell">0</div>
+      <div class="ls-cell">1</div>
+      <div class="ls-cell">0</div>
+      <div class="ls-cell">1</div>
+      <div class="ls-cell ls-total">3</div>
+      <div class="ls-cell ls-total">8</div>
+      <div class="ls-cell ls-total">1</div>
+    </div>
+  </div>
+
+  <!-- ═══ PITCHING ═══ -->
+  <div class="pitching-summary" style="display:flex; gap:48px; margin-top:20px;">
+    <div>
+      <h3>MIN Pitching</h3>
+      <table>
+        <tr><th></th><th>IP</th><th>H</th><th>R</th><th>BB</th><th>K</th><th>P</th></tr>
+        <tr><td class="pitcher-name">P. López</td><td>6.0</td><td>5</td><td>1</td><td>2</td><td>7</td><td>89</td></tr>
+        <tr><td class="pitcher-name">G. Pagán</td><td>1.0</td><td>1</td><td>1</td><td>0</td><td>1</td><td>18</td></tr>
+        <tr><td class="pitcher-name">J. Duran</td><td>1.0</td><td>2</td><td>1</td><td>1</td><td>2</td><td>24</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>WSH Pitching</h3>
+      <table>
+        <tr><th></th><th>IP</th><th>H</th><th>R</th><th>BB</th><th>K</th><th>P</th></tr>
+        <tr><td class="pitcher-name">M. Gore</td><td>5.0</td><td>6</td><td>3</td><td>3</td><td>5</td><td>94</td></tr>
+        <tr><td class="pitcher-name">H. Harvey</td><td>2.0</td><td>2</td><td>2</td><td>0</td><td>3</td><td>31</td></tr>
+        <tr><td class="pitcher-name">K. Finnegan</td><td>2.0</td><td>1</td><td>0</td><td>1</td><td>2</td><td>28</td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

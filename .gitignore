@@ -1,0 +1,5 @@
+.claude
+scorecards/*
+!scorecards/README.md
+games/*
+!games/README.md
